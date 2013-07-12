@@ -26,7 +26,7 @@
 #import "MHNatGeoViewControllerTransition.h"
 @implementation MHNatGeoSegue
 
-- (void) perform {
-       [[self sourceViewController]presentNatGeoViewController:[self destinationViewController] completion:nil];
+- (void)perform {
+       [[self sourceViewController] presentNatGeoViewController:[self destinationViewController] completion:nil];
 }
 @end

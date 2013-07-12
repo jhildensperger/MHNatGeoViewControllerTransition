@@ -25,68 +25,54 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 
-@interface MHNatGeoViewControllerTransition()
-
-@end
-
 @implementation MHNatGeoViewControllerTransition
-@synthesize sourceView = _sourceView;
-@synthesize destinationView = _destinationView;
-@synthesize duration = _duration;
-@synthesize dismissing = _dismissing;
 
 - (id)initWithSourceView:(UIView *)sourceView destinationView:(UIView *)destinationView duration:(NSTimeInterval)duration {
-    self = [super init];
-    if(self) {
-        _sourceView = sourceView;
-        _destinationView = destinationView;
-        _duration = duration;
+    if(self = [super init]) {
+        self.sourceView = sourceView;
+        self.destinationView = destinationView;
+        self.duration = duration;
     }
     return self;
 }
 
-- (void) perform {
+- (void)perform {
     [self perform:nil];
 }
 
 - (void)perform:(void (^)(BOOL finished))completion {
-    
-    if ([self isDimissing]) {
+    if (self.isDimissing) {
         // Reset to initial transform
-        sourceLastTransform([_sourceView layer]);
-        destinationLastTransform([_destinationView layer]);
+        sourceLastTransform([self.sourceView layer]);
+        destinationLastTransform([self.destinationView layer]);
         
          //Perform animation
-        [UIView animateWithDuration:0.8f*_duration delay:0.2f*_duration options:UIViewAnimationOptionCurveLinear animations:^{
-            destinationFirstTransform([_destinationView layer]);
+        [UIView animateWithDuration:0.8f*self.duration delay:0.2f*self.duration options:UIViewAnimationOptionCurveLinear animations:^{
+            destinationFirstTransform([self.destinationView layer]);
         } completion:^(BOOL finished) {
             completion(YES);
         }];
         
-        [UIView animateWithDuration:_duration delay:0.0f options:0 animations:^{
-            sourceFirstTransform([_sourceView layer]);
-        } completion:^(BOOL finished) {
-        
-        }];
-    }else {
+        [UIView animateWithDuration:self.duration delay:0.0f options:0 animations:^{
+            sourceFirstTransform([self.sourceView layer]);
+        } completion:nil];
+    } else {
         // Change anchor point and reposition it.
-        CGRect oldFrame = [[_sourceView layer]frame];
-        [[_sourceView layer]setAnchorPoint:CGPointMake(0.0,0.5f)];
-        [[_sourceView layer] setFrame:oldFrame];
+        CGRect oldFrame = [[self.sourceView layer]frame];
+        [[self.sourceView layer] setAnchorPoint:CGPointMake(0.0,0.5f)];
+        [[self.sourceView layer] setFrame:oldFrame];
         
         // Reset to initial transform
-        sourceFirstTransform([_sourceView layer]);
-        destinationFirstTransform([_destinationView layer]);
+        sourceFirstTransform([self.sourceView layer]);
+        destinationFirstTransform([self.destinationView layer]);
         
         //Perform animation
-        [UIView animateWithDuration:_duration delay:0.0f options:0 animations:^{
-            destinationLastTransform([_destinationView layer]);
-        } completion:^(BOOL finished) {
- 
-        }];
+        [UIView animateWithDuration:self.duration delay:0.0f options:0 animations:^{
+            destinationLastTransform([self.destinationView layer]);
+        } completion:nil];
         
-        [UIView animateWithDuration:0.8*_duration delay:0.2*_duration options:0 animations:^{
-            sourceLastTransform([_sourceView layer]);
+        [UIView animateWithDuration:0.8*self.duration delay:0.2*self.duration options:0 animations:^{
+            sourceLastTransform([self.sourceView layer]);
         } completion:^(BOOL finished) {
             completion(YES);
         }];
@@ -113,7 +99,7 @@ void sourceLastTransform(CALayer *layer) {
 
 void destinationFirstTransform(CALayer * layer) {
     CATransform3D t = CATransform3DIdentity;
-    t.m34 = 1.0/ -500;
+    t.m34 = 1.0 / -500;
     // Rotate 5 degrees within the axis of z axis
     t = CATransform3DRotate(t, radianFromDegree(5.0f), 0.0f,0.0f, 1.0f);
     // Reposition toward to the left where it initialized
@@ -127,7 +113,7 @@ void destinationFirstTransform(CALayer * layer) {
 
 void destinationLastTransform(CALayer * layer) {
     CATransform3D t = CATransform3DIdentity;
-    t.m34 = 1.0/ -500;
+    t.m34 = 1.0 / -500;
     // Rotate to 0 degrees within z axis
     t = CATransform3DRotate(t, radianFromDegree(0), 0.0f,0.0f, 1.0f);
     // Bring back to the final position
@@ -139,20 +125,22 @@ void destinationLastTransform(CALayer * layer) {
     layer.transform = t;
 }
 
+
 #pragma mark - Convert Degrees to Radian
 double radianFromDegree(float degrees) {
     return (degrees / 180) * M_PI;
 }
 
+
 #pragma mark - ViewController Transition
-+ (void) presentViewControllerTransition:(UIViewController*)destination source:(UIViewController*)source duration:(NSTimeInterval) duration completion:(void (^)(BOOL finished))completion{
-    
-    __block UIView * destinationView = [destination view];
++ (void)presentViewControllerTransition:(UIViewController *)destination source:(UIViewController *)source duration:(NSTimeInterval) duration completion:(void (^)(BOOL finished))completion {
+    __block UIView *destinationView = [destination view];
     destinationView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
-    [[[[UIApplication sharedApplication]delegate]window]addSubview:destinationView];
-    MHNatGeoViewControllerTransition * natGeoTransition = [[MHNatGeoViewControllerTransition alloc]initWithSourceView:[source view] destinationView:[destination view] duration:duration];
+    [[[[UIApplication sharedApplication] delegate] window] addSubview:destinationView];
+    
+    MHNatGeoViewControllerTransition *natGeoTransition = [[MHNatGeoViewControllerTransition alloc] initWithSourceView:[source view] destinationView:[destination view] duration:duration];
+    
     [natGeoTransition perform:^(BOOL finished) {
-        [destination setPresentedFromViewController:source];
         [destinationView removeFromSuperview];
         destinationView = nil;
         [source presentViewController:destination animated:NO completion:^{
@@ -162,16 +150,17 @@ double radianFromDegree(float degrees) {
     }];
 }
 
-+ (void)dismissViewController:(UIViewController *)viewController duration:(NSTimeInterval)duration completion:(void (^)(BOOL finished))completion
-{
-    __block UIView * sourceView = [viewController.presentedFromViewController view];
++ (void)dismissViewController:(UIViewController *)viewController duration:(NSTimeInterval)duration completion:(void (^)(BOOL finished))completion {
+    __block UIView *sourceView = [viewController.presentingViewController view];
     sourceView.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
-    [[[[UIApplication sharedApplication]delegate]window]addSubview:sourceView];
-    MHNatGeoViewControllerTransition * natGeoTransition = [[MHNatGeoViewControllerTransition alloc]initWithSourceView:sourceView destinationView:[viewController view] duration:duration];
+    [sourceView setFrame:[[UIScreen mainScreen] applicationFrame]];
+    [[[[UIApplication sharedApplication] delegate] window] addSubview:sourceView];
+    
+    MHNatGeoViewControllerTransition *natGeoTransition = [[MHNatGeoViewControllerTransition alloc] initWithSourceView:sourceView destinationView:[viewController view] duration:duration];
+    
     [natGeoTransition setDismissing:YES];
     [natGeoTransition perform:^(BOOL finished) {
         if(finished){
-            [viewController setPresentedFromViewController:nil];
             [viewController dismissViewControllerAnimated:NO completion:^{
                 if (completion)
                     completion(YES);
@@ -186,10 +175,7 @@ double radianFromDegree(float degrees) {
 #pragma mark - UIViewController(MHNatGeoViewControllerTransition)
 @implementation UIViewController(MHNatGeoViewControllerTransition)
 
-@dynamic presentedFromViewController;
-
-- (void)presentNatGeoViewController:(UIViewController *)viewController completion:(void (^)(BOOL finished))completion
-{
+- (void)presentNatGeoViewController:(UIViewController *)viewController completion:(void (^)(BOOL finished))completion {
 	[MHNatGeoViewControllerTransition presentViewControllerTransition:viewController source:self duration:0.6f completion:completion];
 }
 
@@ -197,30 +183,12 @@ double radianFromDegree(float degrees) {
     [self presentNatGeoViewController:viewController completion:nil];
 }
 
--(void) dismissNatGeoViewControllerWithCompletion:(void (^)(BOOL finished))completion {
+-(void)dismissNatGeoViewControllerWithCompletion:(void (^)(BOOL finished))completion {
     [MHNatGeoViewControllerTransition dismissViewController:self duration:0.5f completion:completion];
 }
 
-- (void) dismissNatGeoViewController {
+- (void)dismissNatGeoViewController {
     [self dismissNatGeoViewControllerWithCompletion:nil];
-}
-
-static char presentedFromViewControllerKey;
-
-- (void) setPresentedFromViewController:(UIViewController *)viewController {
-    [self willChangeValueForKey:@"natGeoPresentedFromViewController"];
-    objc_setAssociatedObject( self,
-                             &presentedFromViewControllerKey,
-                             viewController,
-                             OBJC_ASSOCIATION_RETAIN );
-    
-    [self didChangeValueForKey:@"natGeoPresentedFromViewController"];
-}
-
-- (UIViewController*) presentedFromViewController {
-    id controller = objc_getAssociatedObject( self,
-                                             &presentedFromViewControllerKey );
-    return controller;
 }
 
 @end
